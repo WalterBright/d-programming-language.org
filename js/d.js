@@ -1,6 +1,8 @@
-CodeMirror.defineMode("clike", function(config, parserConfig) {
+CodeMirror.defineMode("d", function(config, parserConfig) {
   var indentUnit = config.indentUnit,
+      statementIndentUnit = parserConfig.statementIndentUnit || indentUnit,
       keywords = parserConfig.keywords || {},
+      builtin = parserConfig.builtin || {},
       blockKeywords = parserConfig.blockKeywords || {},
       atoms = parserConfig.atoms || {},
       hooks = parserConfig.hooks || {},
@@ -21,14 +23,18 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     }
     if (/[\[\]{}\(\),;\:\.]/.test(ch)) {
       curPunc = ch;
-      return null
+      return null;
     }
     if (/\d/.test(ch)) {
       stream.eatWhile(/[\w\.]/);
       return "number";
     }
     if (ch == "/") {
-      if (stream.eat("*") || stream.eat("+")) {
+      if (stream.eat("+")) {
+        state.tokenize = tokenComment;
+        return tokenNestedComment(stream, state);
+      }
+      if (stream.eat("*")) {
         state.tokenize = tokenComment;
         return tokenComment(stream, state);
       }
@@ -47,8 +53,12 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
       return "keyword";
     }
+    if (builtin.propertyIsEnumerable(cur)) {
+      if (blockKeywords.propertyIsEnumerable(cur)) curPunc = "newstatement";
+      return "builtin";
+    }
     if (atoms.propertyIsEnumerable(cur)) return "atom";
-    return "word";
+    return "variable";
   }
 
   function tokenString(quote) {
@@ -59,7 +69,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
         escaped = !escaped && next == "\\";
       }
       if (end || !(escaped || multiLineStrings))
-        state.tokenize = tokenBase;
+        state.tokenize = null;
       return "string";
     };
   }
@@ -68,10 +78,22 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     var maybeEnd = false, ch;
     while (ch = stream.next()) {
       if (ch == "/" && maybeEnd) {
-        state.tokenize = tokenBase;
+        state.tokenize = null;
         break;
       }
-      maybeEnd = (ch == "*" || ch == "+");
+      maybeEnd = (ch == "*");
+    }
+    return "comment";
+  }
+
+  function tokenNestedComment(stream, state) {
+    var maybeEnd = false, ch;
+    while (ch = stream.next()) {
+      if (ch == "/" && maybeEnd) {
+        state.tokenize = null;
+        break;
+      }
+      maybeEnd = (ch == "+");
     }
     return "comment";
   }
@@ -84,7 +106,10 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     this.prev = prev;
   }
   function pushContext(state, col, type) {
-    return state.context = new Context(state.indented, col, type, null, state.context);
+    var indent = state.indented;
+    if (state.context && state.context.type == "statement")
+      indent = state.context.indented;
+    return state.context = new Context(indent, col, type, null, state.context);
   }
   function popContext(state) {
     var t = state.context.type;
@@ -118,7 +143,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       if (style == "comment" || style == "meta") return style;
       if (ctx.align == null) ctx.align = true;
 
-      if ((curPunc == ";" || curPunc == ":") && ctx.type == "statement") popContext(state);
+      if ((curPunc == ";" || curPunc == ":" || curPunc == ",") && ctx.type == "statement") popContext(state);
       else if (curPunc == "{") pushContext(state, stream.column(), "}");
       else if (curPunc == "[") pushContext(state, stream.column(), "]");
       else if (curPunc == "(") pushContext(state, stream.column(), ")");
@@ -128,18 +153,18 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
         while (ctx.type == "statement") ctx = popContext(state);
       }
       else if (curPunc == ctx.type) popContext(state);
-      else if (ctx.type == "}" || ctx.type == "top" || (ctx.type == "statement" && curPunc == "newstatement"))
+      else if (((ctx.type == "}" || ctx.type == "top") && curPunc != ';') || (ctx.type == "statement" && curPunc == "newstatement"))
         pushContext(state, stream.column(), "statement");
       state.startOfLine = false;
       return style;
     },
 
     indent: function(state, textAfter) {
-      if (state.tokenize != tokenBase && state.tokenize != null) return 0;
+      if (state.tokenize != tokenBase && state.tokenize != null) return CodeMirror.Pass;
       var ctx = state.context, firstChar = textAfter && textAfter.charAt(0);
       if (ctx.type == "statement" && firstChar == "}") ctx = ctx.prev;
       var closing = firstChar == ctx.type;
-      if (ctx.type == "statement") return ctx.indented + (firstChar == "{" ? 0 : indentUnit);
+      if (ctx.type == "statement") return ctx.indented + (firstChar == "{" ? 0 : statementIndentUnit);
       else if (ctx.align) return ctx.column + (closing ? 0 : 1);
       else return ctx.indented + (closing ? 0 : indentUnit);
     },
@@ -155,19 +180,26 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     return obj;
   }
 
-  CodeMirror.defineMIME("text/x-d", {
-    name: "clike",
-    keywords: words("abstract alias align assert auto body bool break byte case cast catch cdouble cent cfloat" +
-                    " char class const continue creal dchar debug default delegate delete deprecated double dstring" +
-                    " enum export extern false final float function goto idouble" +
-                    " if ifloat immutable import in inout int interface invariant ireal is lazy long macro mixin" + 
-                    " module new nothrow out override package pragma private protected public pure real ref" + 
-                    " return scope string shared short static struct success super switch synchronized template this throw true" + 
-                    " try typeid typeof ubyte ucent uint ulong union unittest ushort version void volatile" + 
-                    " wchar with wstring __FILE__ __LINE__ __gshared __traits"),
-    atoms: words("asm catch class debug do else exit failure finally for foreach foreach_reverse if struct switch synchronized unittest version try while with "),
+  var blockKeywords = "body catch class do else enum for foreach foreach_reverse if in interface mixin " +
+                      "out scope struct switch try union unittest version while with";
 
+  CodeMirror.defineMIME("text/x-d", {
+    name: "d",
+    keywords: words("abstract alias align asm assert auto break case cast cdouble cent cfloat const continue " +
+                    "debug default delegate delete deprecated export extern final finally function goto immutable " +
+                    "import inout invariant is lazy macro module new nothrow override package pragma private " +
+                    "protected public pure ref return shared short static super synchronized template this " +
+                    "throw typedef typeid typeof volatile __FILE__ __LINE__ __gshared __traits __vector __parameters " +
+                    blockKeywords),
+    blockKeywords: words(blockKeywords),
+    builtin: words("bool byte char creal dchar double float idouble ifloat int ireal long real short ubyte " +
+                   "ucent uint ulong ushort wchar wstring void size_t sizediff_t"),
+    atoms: words("exit failure success true false null"),
     hooks: {
+      "@": function(stream, _state) {
+        stream.eatWhile(/[\w\$_]/);
+        return "meta";
+      }
     }
   });
 }());
