@@ -217,13 +217,13 @@ $(H3 $(LEGACY_LNAME2 PredefinedVersions, predefined-versions, Predefined Version
         $(LONGTABLE_2COLS 0.6, Predefined Version Identifiers,
         $(THEAD Version Identifier, Description),
 
-        $(THEAD Host Compiler),
+        $(TROW *Host Compiler*)
         $(TROW $(ARGS $(D DigitalMars)) , $(ARGS DMD (Digital Mars D)))
         $(TROW $(ARGS $(D GNU)) , $(ARGS GDC (GNU D Compiler)))
         $(TROW $(ARGS $(D LDC)) , $(ARGS LDC (LLVM D Compiler)))
         $(TROW $(ARGS $(D SDC)) , $(ARGS SDC (Snazzy D Compiler)))
 
-        $(THEAD Target Operating System),
+        $(TROW *Target Operating System*)
         $(TROW $(ARGS $(D Windows)) , $(ARGS Microsoft Windows systems))
         $(TROW $(ARGS $(D Win32)) , $(ARGS Microsoft 32-bit Windows systems))
         $(TROW $(ARGS $(D Win64)) , $(ARGS Microsoft 64-bit Windows systems))
@@ -252,7 +252,7 @@ $(H3 $(LEGACY_LNAME2 PredefinedVersions, predefined-versions, Predefined Version
         $(TROW $(ARGS $(D PlayStation4)) , $(ARGS The PlayStation 4 platform))
         $(TROW $(ARGS $(D FreeStanding)) , $(ARGS An environment without an operating system (such as Bare-metal targets)))
 
-        $(THEAD Target Environment),
+        $(TROW *Target Environment*)
         $(TROW $(ARGS $(D Cygwin)) , $(ARGS The Cygwin environment))
         $(TROW $(ARGS $(D MinGW)) , $(ARGS The MinGW environment))
         $(TROW $(ARGS $(D CRuntime_Bionic)) , $(ARGS Bionic C runtime))
@@ -271,7 +271,7 @@ $(H3 $(LEGACY_LNAME2 PredefinedVersions, predefined-versions, Predefined Version
         $(TROW $(ARGS $(D CppRuntime_Microsoft)) , $(ARGS Microsoft C++ runtime))
         $(TROW $(ARGS $(D CppRuntime_Sun)) , $(ARGS Sun C++ runtime))
 
-        $(THEAD Target CPU and Instruction Set),
+        $(TROW *Target CPU and Instruction Set*)
         $(TROW $(ARGS $(D X86)) , $(ARGS Intel and AMD 32-bit processors))
         $(TROW $(ARGS $(D X86_64)) , $(ARGS Intel and AMD 64-bit processors))
         $(TROW $(ARGS $(D ARM)) , $(ARGS The ARM architecture (32-bit) (AArch32 et al)))
@@ -319,15 +319,15 @@ $(H3 $(LEGACY_LNAME2 PredefinedVersions, predefined-versions, Predefined Version
         $(TROW $(ARGS $(D Alpha_SoftFloat)) , $(ARGS The Alpha soft float ABI))
         $(TROW $(ARGS $(D Alpha_HardFloat)) , $(ARGS The Alpha hard float ABI))
 
-        $(THEAD Byte Order (endianess))
+        $(TROW *Byte Order (endianness)*)
         $(TROW $(ARGS $(D LittleEndian)) , $(ARGS Byte order, least significant first))
         $(TROW $(ARGS $(D BigEndian)) , $(ARGS Byte order, most significant first))
 
-        $(THEAD Executable and Link Format)
+        $(TROW *Executable and Link Format*)
         $(TROW $(ARGS $(D ELFv1)) , $(ARGS Elf version 1))
         $(TROW $(ARGS $(D ELFv2)) , $(ARGS Elf version 2))
 
-        $(THEAD Miscellaneous)
+        $(TROW *Miscellaneous*)
         $(TROW $(ARGS $(D D_BetterC)) , $(ARGS $(DDLINK spec/betterc, D as Better C, D as Better C) code
                 (command line switch $(DDSUBLINK dmd, switch-betterC, $(TT -betterC))) is being generated))
         $(TROW $(ARGS $(D D_Exceptions)) , $(ARGS Exception handling is supported.  Evaluates to `false` when compiling with
@@ -371,7 +371,7 @@ $(H3 $(LEGACY_LNAME2 PredefinedVersions, predefined-versions, Predefined Version
         $(TROW $(ARGS $(D D_PostConditions)) , $(ARGS Checks are being emitted for $(DDSUBLINK spec/function, contracts, out contracts)))
         $(TROW $(ARGS $(D D_Invariants)) , $(ARGS Checks are being emitted for $(DDSUBLINK spec/class, invariants, class invariants) and $(DDSUBLINK spec/struct, Invariant, struct invariants)))
 
-        $(THEAD Special Cases),
+        $(TROW *Special Cases*)
         $(TROW $(ARGS $(D none)) , $(ARGS Never defined; used to just disable a section of code))
         $(TROW $(ARGS $(D all)) , $(ARGS Always defined; used as the opposite of $(D none)))
         )
